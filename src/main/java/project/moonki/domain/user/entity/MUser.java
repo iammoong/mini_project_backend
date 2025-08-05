@@ -2,6 +2,7 @@ package project.moonki.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import project.moonki.enums.Role;
 
 @Entity
 @Table(name = "m_user")
@@ -27,6 +28,10 @@ public class MUser {
 
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Role role = Role.USER;
 
     public MUser(String username) {
         this.username = username;
