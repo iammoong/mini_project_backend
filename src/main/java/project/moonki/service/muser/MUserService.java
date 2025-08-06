@@ -5,13 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.moonki.dto.muser.LoginRequestDto;
 import project.moonki.dto.muser.SignupRequestDto;
 import project.moonki.dto.muser.UserResponseDto;
 import project.moonki.domain.user.entity.MUser;
 import project.moonki.enums.Role;
 import project.moonki.mapper.MUserMapper;
-import project.moonki.repository.MuserRepository;
+import project.moonki.repository.user.MuserRepository;
 
 import java.time.LocalDateTime;
 
@@ -40,6 +39,8 @@ public class MUserService {
                 .username(req.getUsername())
                 .password(passwordEncoder.encode(req.getPassword()))
                 .nickname(req.getNickname())
+                .email(req.getEmail())
+                .phone(req.getPhone())
                 .createdAt(LocalDateTime.now())
                 .role(Role.USER)
                 .build();

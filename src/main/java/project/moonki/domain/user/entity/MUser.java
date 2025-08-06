@@ -29,6 +29,12 @@ public class MUser {
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
 
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
+
+    @Column(length = 20)
+    private String phone;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role = Role.USER;

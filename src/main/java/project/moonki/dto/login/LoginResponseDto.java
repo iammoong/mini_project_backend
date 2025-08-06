@@ -2,12 +2,12 @@ package project.moonki.dto.login;
 
 import project.moonki.dto.muser.UserResponseDto;
 
-public class LoginResponse {
+public class LoginResponseDto {
 
     private final UserResponseDto user;
     private final String token;
 
-    public LoginResponse(UserResponseDto user, String token) {
+    public LoginResponseDto(UserResponseDto user, String token) {
         this.user = user;
         this.token = token;
     }

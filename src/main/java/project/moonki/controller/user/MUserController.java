@@ -2,16 +2,12 @@ package project.moonki.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.moonki.domain.user.entity.MUser;
-import project.moonki.dto.login.MUserDetails;
-import project.moonki.dto.muser.UserResponseDto;
-import project.moonki.mapper.MUserMapper;
-import project.moonki.repository.MuserRepository;
+import project.moonki.repository.user.MuserRepository;
 
 @RestController
 @RequestMapping("/auth")

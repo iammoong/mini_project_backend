@@ -9,8 +9,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import project.moonki.domain.user.entity.MUser;
-import project.moonki.dto.login.MUserDetails;
-import project.moonki.repository.MuserRepository;
+import project.moonki.dto.login.MUserDetailsDto;
+import project.moonki.repository.user.MuserRepository;
 
 import java.io.IOException;
 
@@ -33,10 +33,10 @@ public class JwtAuthenticationFilter extends GenericFilter {
             // DB에서 유저 조회 (optional, 필요시)
             MUser user = muserRepository.findByUserId(userId).orElse(null);
             if (user != null) {
-                MUserDetails userDetails = new MUserDetails(user);
+                MUserDetailsDto userDetails = new MUserDetailsDto(user);
                 // 인증 객체 생성(실무는 UserDetails, 여기선 간단히 userId만)
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(new MUserDetails(user), null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(new MUserDetailsDto(user), null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails((HttpServletRequest) request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

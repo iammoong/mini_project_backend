@@ -9,7 +9,7 @@ import project.moonki.domain.user.entity.MUser;
 import project.moonki.dto.muser.LoginRequestDto;
 import project.moonki.dto.muser.UserResponseDto;
 import project.moonki.mapper.MUserMapper;
-import project.moonki.repository.MuserRepository;
+import project.moonki.repository.user.MuserRepository;
 
 @Service
 @RequiredArgsConstructor

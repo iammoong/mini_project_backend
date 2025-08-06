@@ -1,5 +1,6 @@
 package project.moonki.dto.login;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,10 +9,11 @@ import project.moonki.domain.user.entity.MUser;
 import java.util.Collection;
 import java.util.Collections;
 
-public class MUserDetails implements UserDetails {
+@Getter
+public class MUserDetailsDto implements UserDetails {
     private final MUser user;
 
-    public MUserDetails(MUser user) {
+    public MUserDetailsDto(MUser user) {
         this.user = user;
     }
 
