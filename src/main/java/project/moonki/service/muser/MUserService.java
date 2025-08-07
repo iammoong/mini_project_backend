@@ -34,6 +34,14 @@ public class MUserService {
         if(muserRepository.existsByUserId(req.getUserId())) {
             throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
         }
+        // 닉네임 중복 체크
+        if(muserRepository.existsByNickname(req.getNickname())) {
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+        }
+        //이메일 중복 체크
+        if(muserRepository.existsByEmail(req.getEmail())) {
+            throw new IllegalArgumentException("이미 등록된 이메일 아이디 입니다.");
+        }
         MUser user = MUser.builder()
                 .userId(req.getUserId())
                 .username(req.getUsername())

@@ -23,4 +23,8 @@ public class EmailAuthCode {
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // 요청 제한
+    private Integer requestCount = 0;
+    private LocalDateTime blockedUntil;
+
 }
