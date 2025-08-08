@@ -8,16 +8,19 @@ import project.moonki.enums.Role;
 @Table(name = "m_user")
 @Getter @Setter @AllArgsConstructor
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class MUser {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "kakao_id", length = 50)
+    private String kakaoId;
+
     @Column(name = "user_id", nullable = false, unique = true, length = 50)
     private String userId; // 로그인용 아이디
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String username;
 
     @Column(nullable = false, length = 255)

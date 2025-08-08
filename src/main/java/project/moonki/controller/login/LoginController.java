@@ -16,8 +16,8 @@ import project.moonki.service.login.LoginService;
 import project.moonki.service.muser.MUserService;
 
 @RestController
-@RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@RequestMapping("/api/auth")
 public class LoginController {
 
     private final MUserService mUserService;
@@ -83,3 +83,4 @@ public class LoginController {
         return ResponseEntity.ok(MUserMapper.toResponse(principal.getUser()));
     }
 }
+

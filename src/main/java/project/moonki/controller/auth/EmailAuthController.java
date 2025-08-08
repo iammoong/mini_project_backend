@@ -1,6 +1,5 @@
 package project.moonki.controller.auth;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -100,7 +99,12 @@ public class EmailAuthController {
         return ResponseEntity.ok(result);
     }
 
-    // 아이디로 마스킹된 이메일/휴대폰 정보 반환 (비밀번호 찾기 1단계)
+    /***
+     * 아이디로 마스킹된 이메일/휴대폰 정보 반환
+     *
+     * @param userId
+     * @return
+     */
     @GetMapping("/findUser")
     public ResponseEntity<Map<String, String>> findUserForPw(@RequestParam String userId) {
         Optional<MUser> userOpt = muserRepository.findByUserId(userId);
@@ -118,7 +122,12 @@ public class EmailAuthController {
         return ResponseEntity.ok(result);
     }
 
-    // 임시비밀번호 발급 및 메일 전송 (비밀번호 찾기 2단계)
+    /***
+     * 임시비밀번호 발급 및 메일 전송
+     *
+     * @param req
+     * @return
+     */
     @PostMapping("/sendTempPw")
     public ResponseEntity<EmailAuthResponseDto> sendTempPassword(@RequestBody Map<String, String> req) {
         String userId = req.get("userId");
@@ -155,7 +164,12 @@ public class EmailAuthController {
         return ResponseEntity.ok(new EmailAuthResponseDto(true, "임시비밀번호가 발송되었습니다."));
     }
 
-    // 이메일 마스킹 유틸 (ex. te**@te**.com)
+    /***
+     * 이메일 마스킹 유틸
+     *
+     * @param email
+     * @return
+     */
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) return "";
         String[] parts = email.split("@");
@@ -175,7 +189,14 @@ public class EmailAuthController {
         return (maskedId + "@" + maskedDomain + tld).toLowerCase();
     }
 
-    // 글자수에 맞게 랜덤한 위치에 n개 * 표시 (단, 첫/마지막 글자는 되도록 유지)
+    /***
+     * 글자수에 맞게 랜덤한 위치에 n개 * 표시
+     *
+     * @param src
+     * @param random
+     * @param starCount
+     * @return
+     */
     private String maskWithRandomStars(String src, java.util.Random random, int starCount) {
         if (src.length() <= 2) return src.charAt(0) + "*"; // ex: ab -> a*
         char[] arr = src.toCharArray();
@@ -190,7 +211,14 @@ public class EmailAuthController {
         return new String(arr);
     }
 
-    // 휴대폰 마스킹 유틸 (ex. 010-12**-56**)
+    //
+
+    /***
+     * 휴대폰 마스킹 유틸 (ex. 010-12**-56**)
+     *
+     * @param phone
+     * @return
+     */
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < 8) return "";
         return phone.replaceAll("(\\d{3})-?(\\d{2,4})-?(\\d{2,4})", "$1-**$2-**$3");

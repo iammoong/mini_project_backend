@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface MuserRepository extends JpaRepository<MUser, Long> {
     Optional <MUser> findByUserId(String userId);
+    Optional <MUser> findByKakaoId(String kakaoId);
     boolean existsByUserId(String userId);
     boolean existsByNickname(String nickname);
 
