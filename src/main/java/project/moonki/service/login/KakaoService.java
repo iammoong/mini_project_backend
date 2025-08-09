@@ -7,7 +7,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import project.moonki.config.KakaoConfig;
-import project.moonki.dto.KakaoUserDto;
+import project.moonki.dto.kakao.KakaoUserDto;
+import project.moonki.dto.kakao.KakaoUserResponseDto;
 
 import java.util.Map;
 
@@ -18,47 +19,53 @@ public class KakaoService {
     private final KakaoConfig kakaoConfig;
 
     public String getAccessToken(String code) {
-        String tokenUrl = "https://kauth.kakao.com/oauth/token";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var params = new LinkedMultiValueMap<String, String>();
         params.add("grant_type", "authorization_code");
-        params.add("client_id", kakaoConfig.getRestApiKey());
+        params.add("client_id", kakaoConfig.getClientId());
+        if (kakaoConfig.getClientSecret() != null && !kakaoConfig.getClientSecret().isBlank()) {
+            params.add("client_secret", kakaoConfig.getClientSecret());
+        }
         params.add("redirect_uri", kakaoConfig.getRedirectUri());
         params.add("code", code);
 
-        HttpEntity<?> entity = new HttpEntity<>(params, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, entity, Map.class);
+        var entity = new HttpEntity<>(params, headers);
+        var rest = new RestTemplate();
+        ResponseEntity<Map> res = rest.postForEntity(kakaoConfig.getTokenUri(), entity, Map.class);
 
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            return (String) response.getBody().get("access_token");
-        } else {
-            System.out.println("카카오 토큰 요청 실패: " + response.getStatusCode() + " / " + response.getBody());
-            throw new RuntimeException("카카오 토큰 요청 실패: " + response.getStatusCode());
-        }
+        if (!res.getStatusCode().is2xxSuccessful() || res.getBody() == null)
+            throw new RuntimeException("카카오 토큰 요청 실패: " + res.getStatusCode());
+
+        return (String) res.getBody().get("access_token");
     }
 
-    public KakaoUserDto getKakaoUserInfo(String accessToken) {
-        String apiUrl = "https://kapi.kakao.com/v2/user/me";
+    public KakaoUserDto getKakaoUserInfo(String kakaoAccessToken) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        HttpEntity<?> entity = new HttpEntity<>(headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, Map.class);
+        headers.setBearerAuth(kakaoAccessToken);
 
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            System.out.println("카카오 유저 정보 조회 실패: " + response.getStatusCode() + " / " + response.getBody());
-            throw new RuntimeException("카카오 유저 정보 조회 실패: " + response.getStatusCode());
-        }
+        var entity = new HttpEntity<>(headers);
+        var rest = new RestTemplate();
 
-        Map<String, Object> kakaoAccount = (Map<String, Object>) response.getBody().get("kakao_account");
+        ResponseEntity<KakaoUserResponseDto> res =
+                rest.exchange(kakaoConfig.getUserinfoUri(), HttpMethod.GET, entity, KakaoUserResponseDto.class);
 
+        if (!res.getStatusCode().is2xxSuccessful() || res.getBody() == null)
+            throw new RuntimeException("카카오 유저 정보 조회 실패: " + res.getStatusCode());
+
+        var body = res.getBody();
+
+        // 프로젝트 내부에서 쓰는 간단 DTO로 변환
         KakaoUserDto dto = new KakaoUserDto();
-        dto.setEmail((String) kakaoAccount.get("email"));
-        dto.setNickname((String) ((Map) kakaoAccount.get("profile")).get("nickname"));
-        dto.setId(String.valueOf(response.getBody().get("id")));
+        dto.setId(String.valueOf(body.getId()));  // MUser.kakaoId가 String이므로 String으로 저장
+        if (body.getKakao_account() != null) {
+            dto.setEmail(body.getKakao_account().getEmail());
+            if (body.getKakao_account().getProfile() != null) {
+                dto.setNickname(body.getKakao_account().getProfile().getNickname());
+            }
+        }
         return dto;
     }
+
 }

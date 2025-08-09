@@ -1,4 +1,4 @@
-package project.moonki.dto;
+package project.moonki.dto.kakao;
 
 import lombok.Data;
 
