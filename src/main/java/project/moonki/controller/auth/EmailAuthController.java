@@ -11,6 +11,7 @@ import project.moonki.dto.auth.EmailAuthResponseDto;
 import project.moonki.repository.user.MuserRepository;
 import project.moonki.service.auth.EmailAuthCodeService;
 import project.moonki.service.auth.MailService;
+import project.moonki.utils.PasswordUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -143,7 +144,7 @@ public class EmailAuthController {
         MUser user = userOpt.get();
 
         // 1. 임시비밀번호 생성
-        String tempPassword = EmailAuthCodeService.generateRandomPassword(10);
+        String tempPassword = PasswordUtil.generateRandomPassword(10);
         // 2. 비밀번호 암호화 저장
         user.setPassword(passwordEncoder.encode(tempPassword));
         muserRepository.save(user);

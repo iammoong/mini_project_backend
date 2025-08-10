@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 
 @Getter @Setter
 @Component
-@ConfigurationProperties(prefix = "kakao")
+@ConfigurationProperties(prefix = "kakao.oauth")
 public class KakaoConfig {
     private String clientId;
-    private String clientSecret;   // optional
+    private String clientSecret;
     private String redirectUri;
     private String authorizeUri;
     private String tokenUri;

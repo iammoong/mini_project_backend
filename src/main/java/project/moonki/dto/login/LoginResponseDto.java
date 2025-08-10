@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import project.moonki.dto.muser.UserResponseDto;
 
-@Builder
+
 @Getter @Setter
 public class LoginResponseDto {
 
@@ -17,6 +17,7 @@ public class LoginResponseDto {
     private String email;
     private String kakaoId;
 
+    @Builder
     public LoginResponseDto(UserResponseDto user, String token) {
         this.user = user;
         this.token = token;

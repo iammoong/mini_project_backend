@@ -1,58 +1,34 @@
 package project.moonki.controller.login;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import project.moonki.domain.user.entity.MUser;
-import project.moonki.dto.kakao.KakaoUserDto;
-import project.moonki.repository.user.MuserRepository;
-import project.moonki.security.JwtTokenProvider;
-import project.moonki.service.login.KakaoService;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import project.moonki.dto.login.LoginResponseDto;
+import project.moonki.service.kakao.AuthService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/auth/kakao")
+@RequestMapping("/api/auth/kakao")
 public class KakaoLoginController {
 
-    private final KakaoService kakaoService;
-    private final MuserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthService authService; // ✅ 새 AuthService만 주입
 
+    // 요청 바디용 DTO (record)
+    public record CodeRequest(@NotBlank String code) {}
+
+    /**
+     * 카카오 인가코드(code)를 받아
+     * - 카카오 토큰 교환
+     * - 카카오 사용자 조회
+     * - 우리 사용자 upsert
+     * - 우리 JWT 발급
+     * 을 수행하고 LoginResponseDto(user, token)을 반환합니다.
+     */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
-        String code = body.get("code");
-        if (code == null || code.isBlank())
-            return ResponseEntity.badRequest().body("카카오 인가코드(code)가 필요합니다.");
-
-        // 1. 액세스 토큰 교환
-        String kakaoAccess = kakaoService.getAccessToken(code);
-
-        // 2. 사용자 정보
-        KakaoUserDto kakaoUser = kakaoService.getKakaoUserInfo(kakaoAccess);
-
-        // 3. 우리 User upsert
-        MUser user = userRepository.findByKakaoId(kakaoUser.getId())
-                .orElseGet(() -> {
-                    MUser created = MUser.builder()
-                            .userId(kakaoUser.getEmail() != null ? kakaoUser.getEmail() : "kakao_" + kakaoUser.getId())
-                            .username(kakaoUser.getNickname() != null ? kakaoUser.getNickname() : "카카오사용자")
-                            .email(kakaoUser.getEmail() != null ? kakaoUser.getEmail() : ("kakao_" + kakaoUser.getId() + "@none.local"))
-                            .kakaoId(kakaoUser.getId())
-                            .build();
-                    return userRepository.save(created);
-                });
-
-        // 4. JWT 발급 (기존 JwtTokenProvider 재사용)
-        String jwt = jwtTokenProvider.generateToken(user.getUserId());
-
-        Map<String, Object> res = new HashMap<>();
-        res.put("token", jwt);
-        res.put("userId", user.getUserId());
-        res.put("username", user.getUsername());
-        return ResponseEntity.ok(res);
+    public ResponseEntity<LoginResponseDto> login(@Validated @RequestBody CodeRequest req) {
+        LoginResponseDto result = authService.loginWithKakao(req.code());
+        return ResponseEntity.ok(result);
     }
 }
