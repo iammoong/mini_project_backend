@@ -13,7 +13,7 @@ import project.moonki.service.kakao.AuthService;
 @RequestMapping("/api/auth/kakao")
 public class KakaoLoginController {
 
-    private final AuthService authService; // ✅ 새 AuthService만 주입
+    private final AuthService authService;
 
     // 요청 바디용 DTO (record)
     public record CodeRequest(@NotBlank String code) {}
@@ -24,7 +24,7 @@ public class KakaoLoginController {
      * - 카카오 사용자 조회
      * - 우리 사용자 upsert
      * - 우리 JWT 발급
-     * 을 수행하고 LoginResponseDto(user, token)을 반환합니다.
+     * 을 수행하고 LoginResponseDto(user, token)을 반환
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Validated @RequestBody CodeRequest req) {

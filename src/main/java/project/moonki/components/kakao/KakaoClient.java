@@ -2,8 +2,7 @@ package project.moonki.components.kakao;
 
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -15,11 +14,10 @@ import project.moonki.config.KakaoConfig;
 import project.moonki.dto.kakao.KakaoTokenResponse;
 import project.moonki.dto.kakao.KakaoUserResponseDto;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class KakaoClient {
-
-    private static final Logger log = LoggerFactory.getLogger(KakaoClient.class);
 
     private final KakaoConfig kakao;
     private final RestTemplate rest = new RestTemplate();

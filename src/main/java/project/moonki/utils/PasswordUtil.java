@@ -6,11 +6,22 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+/**
+ * Utility class for password-related operations.
+ * Provides functionality to generate a random password with a specified length.
+ * The generated password is a combination of uppercase letters, lowercase letters,
+ * digits, and special characters for enhanced security.
+ */
 public class PasswordUtil {
 
     private PasswordUtil() {}
 
-    // 랜덤 비밀번호 생성 유틸 (대문자, 소문자, 숫자, 특수문자 조합)
+    /***
+     * 랜덤 비밀번호 생성 유틸 (대문자, 소문자, 숫자, 특수문자 조합)
+     *
+     * @param length
+     * @return
+     */
     public static String generateRandomPassword(int length) {
         String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         String lower = "abcdefghijklmnopqrstuvwxyz";
@@ -34,4 +45,5 @@ public class PasswordUtil {
         pwdChars.forEach(result::append);
         return result.toString();
     }
+
 }
