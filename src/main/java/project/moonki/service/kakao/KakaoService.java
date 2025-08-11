@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthService {private final KakaoClient kakaoClient;
+public class KakaoService {private final KakaoClient kakaoClient;
     private final MuserRepository users;
     private final JwtTokenProvider jwt;
     private final PasswordEncoder passwordEncoder;
@@ -60,7 +60,7 @@ public class AuthService {private final KakaoClient kakaoClient;
                     ? me.getKakao_account().getProfile().getNickname() : PasswordUtil.generateRandomPassword(10);
 
             // userId 결정
-            String userId = (email != null && !email.isBlank()) ? email : ("kakao_" + kakaoId);
+            String userId ="kakao_" + kakaoId;
             String kakaoIdStr = String.valueOf(kakaoId);
 
             //  최초 가입 시에만 랜덤 비밀번호 생성 후 BCrypt로 암호화하여 저장

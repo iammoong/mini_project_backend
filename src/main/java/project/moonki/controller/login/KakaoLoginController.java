@@ -6,14 +6,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import project.moonki.dto.login.LoginResponseDto;
-import project.moonki.service.kakao.AuthService;
+import project.moonki.service.kakao.KakaoService;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth/kakao")
 public class KakaoLoginController {
 
-    private final AuthService authService;
+    private final KakaoService kakaoService;
 
     // 요청 바디용 DTO (record)
     public record CodeRequest(@NotBlank String code) {}
@@ -28,7 +28,7 @@ public class KakaoLoginController {
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Validated @RequestBody CodeRequest req) {
-        LoginResponseDto result = authService.loginWithKakao(req.code());
+        LoginResponseDto result = kakaoService.loginWithKakao(req.code());
         return ResponseEntity.ok(result);
     }
 }

@@ -16,8 +16,10 @@ public class MUserMapper {
         UserResponseDto dto = new UserResponseDto();
         dto.setId(user.getId());
         dto.setUserId(user.getUserId());
+        dto.setKakaoId(user.getKakaoId());
         dto.setUsername(user.getUsername());
         dto.setNickname(user.getNickname());
+        dto.setEmail(user.getEmail());
         dto.setCreatedAt(user.getCreatedAt());
         return dto;
     }

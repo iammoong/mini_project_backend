@@ -65,13 +65,13 @@ public class EmailAuthCodeService {
                 codeRepository.save(entity);
 
             } else {
-                EmailAuthCode newEntity = new EmailAuthCode();
-                newEntity.setEmail(email);
-                newEntity.setCode(code);
-                newEntity.setExpiresAt(now.plusMinutes(minutes));
-                newEntity.setCreatedAt(now);
-                newEntity.setRequestCount(1);
-                codeRepository.save(newEntity);
+                EmailAuthCode authCode = new EmailAuthCode();
+                authCode.setEmail(email);
+                authCode.setCode(code);
+                authCode.setExpiresAt(now.plusMinutes(minutes));
+                authCode.setCreatedAt(now);
+                authCode.setRequestCount(1);
+                codeRepository.save(authCode);
             }
             return null; // 정상 처리
 
