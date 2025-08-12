@@ -1,4 +1,4 @@
-package project.moonki.dto.muser;
+package project.moonki.dto.login;
 
 import lombok.Data;
 

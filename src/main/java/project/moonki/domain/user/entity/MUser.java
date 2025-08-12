@@ -42,6 +42,10 @@ public class MUser {
     @Column(nullable = false, length = 20)
     private Role role = Role.USER;
 
+    public void changePassword(String encodedPw) {
+        this.password = encodedPw;
+    }
+
     public MUser(String username) {
         this.username = username;
     }

@@ -20,6 +20,7 @@ public class MUserMapper {
         dto.setUsername(user.getUsername());
         dto.setNickname(user.getNickname());
         dto.setEmail(user.getEmail());
+        dto.setPhone(user.getPhone());
         dto.setCreatedAt(user.getCreatedAt());
         return dto;
     }

@@ -1,86 +1,49 @@
 package project.moonki.controller.login;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import project.moonki.dto.login.LoginResponseDto;
-import project.moonki.dto.login.MUserDetailsDto;
-import project.moonki.dto.muser.LoginRequestDto;
+import project.moonki.dto.login.LoginRequestDto;
+import project.moonki.dto.muser.ChangePasswordRequestDto;
 import project.moonki.dto.muser.SignupRequestDto;
 import project.moonki.dto.muser.UserResponseDto;
-import project.moonki.mapper.MUserMapper;
-import project.moonki.repository.user.MuserRepository;
-import project.moonki.security.JwtTokenProvider;
 import project.moonki.service.login.LoginService;
-import project.moonki.service.muser.MUserService;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class LoginController {
 
-    private final MUserService mUserService;
-    private final MuserRepository muserRepository;
     private final LoginService loginService;
-    private final JwtTokenProvider jwtTokenProvider;
 
-    /***
-     * 회원가입
-     *
-     * @param req
-     * @return
-     */
     @PostMapping("/signup")
-    public ResponseEntity<UserResponseDto> signup(@RequestBody SignupRequestDto req) {
-        return ResponseEntity.ok(mUserService.signup(req));
+    public UserResponseDto signup(@RequestBody SignupRequestDto req) {
+        return loginService.signup(req);
     }
 
-    /***
-     * 로그인
-     *
-     * @param req
-     * @return
-     */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto req) {
-        UserResponseDto user = loginService.login(req); // 비밀번호 등 검증
-        String token = jwtTokenProvider.generateToken(user.getUserId());
-        LoginResponseDto loginResponse = new LoginResponseDto(user, token);
-        return ResponseEntity.ok(loginResponse);
+    public LoginResponseDto login(@RequestBody LoginRequestDto req) {
+        return loginService.login(req);
     }
 
-    /***
-     * 아이디 중복 체크
-     *
-     * @param userId
-     * @return
-     */
     @GetMapping("/exists/userId")
-    public ResponseEntity<Boolean> checkUserId(@RequestParam String userId) {
-        boolean exists = muserRepository.existsByUserId(userId);
-        return ResponseEntity.ok(exists);
+    public boolean checkUserId(@RequestParam String userId) {
+        return loginService.existsUserId(userId);
     }
 
-    /***
-     * 닉네임 중복 체크
-     *
-     * @param nickname
-     * @return
-     */
     @GetMapping("/exists/nickname")
-    public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
-        boolean exists = muserRepository.existsByNickname(nickname);
-        return ResponseEntity.ok(exists);
+    public boolean checkNickname(@RequestParam String nickname) {
+        return loginService.existsNickname(nickname);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDto> getMe(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
-        MUserDetailsDto principal = (MUserDetailsDto) authentication.getPrincipal();
-        return ResponseEntity.ok(MUserMapper.toResponse(principal.getUser()));
+    public UserResponseDto getMe() {
+        return loginService.me();
     }
+
+
 }
 

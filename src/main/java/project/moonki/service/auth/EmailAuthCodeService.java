@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.moonki.domain.auth.EmailAuthCode;
 import project.moonki.repository.auth.EmailAuthCodeRepository;
+import project.moonki.utils.LogUtil;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -76,10 +77,10 @@ public class EmailAuthCodeService {
             return null; // 정상 처리
 
         } catch (DataAccessException e) {
-            log.error("이메일 인증코드 저장 중 데이터 접근 예외 - email={}", email, e);
+            LogUtil.error(log, EmailAuthCodeService.class, e);
             throw new RuntimeException("인증번호 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
         } catch (Exception e) {
-            log.error("이메일 인증코드 저장 중 예기치 못한 예외 - email={}", email, e);
+            LogUtil.error(log, EmailAuthCodeService.class, e);
             throw new RuntimeException("인증번호 처리 중 오류가 발생했습니다.");
         }
     }
@@ -107,10 +108,10 @@ public class EmailAuthCodeService {
             return false;
 
         } catch (DataAccessException e) {
-            log.error("이메일 인증코드 검증 중 데이터 접근 예외 - email={}", email, e);
+            LogUtil.error(log, EmailAuthCodeService.class, e);
             throw new RuntimeException("인증번호 검증 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
         } catch (Exception e) {
-            log.error("이메일 인증코드 검증 중 예기치 못한 예외 - email={}", email, e);
+            LogUtil.error(log, EmailAuthCodeService.class, e);
             throw new RuntimeException("인증번호 검증 중 오류가 발생했습니다.");
         }
     }

@@ -12,6 +12,7 @@ import project.moonki.domain.user.entity.MUser;
 import project.moonki.dto.auth.EmailAuthRequestDto;
 import project.moonki.dto.auth.EmailAuthResponseDto;
 import project.moonki.repository.user.MuserRepository;
+import project.moonki.utils.LogUtil;
 import project.moonki.utils.MaskingUtil;
 import project.moonki.utils.PasswordUtil;
 
@@ -50,7 +51,7 @@ public class EmailAuthFacade {
             try {
                 mailService.sendAuthCodeMail(request.getEmail(), code, "고객", expiresTime);
             } catch (Exception e) {
-                log.error("인증코드 메일 발송 실패 - email={}", request.getEmail(), e);
+                LogUtil.error(log, EmailAuthFacade.class, e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(new EmailAuthResponseDto(false, "이메일 발송 실패"));
             }
@@ -58,7 +59,7 @@ public class EmailAuthFacade {
             return ResponseEntity.ok(new EmailAuthResponseDto(true, "이메일로 인증번호가 발송되었습니다."));
 
         } catch (DataAccessException e) {
-            log.error("인증코드 발송 처리 중 데이터 접근 예외 - email={}", request.getEmail(), e);
+            LogUtil.error(log, EmailAuthFacade.class, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new EmailAuthResponseDto(false, "처리 중 오류가 발생했습니다."));
         } catch (Exception e) {
@@ -83,7 +84,7 @@ public class EmailAuthFacade {
             return ResponseEntity.ok(result);
 
         } catch (DataAccessException e) {
-            log.error("userId 조회 중 데이터 접근 예외 - email={}", email, e);
+            LogUtil.error(log, EmailAuthFacade.class, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new HashMap<>());
         } catch (Exception e) {
             log.error("userId 조회 중 예기치 못한 예외 - email={}", email, e);
@@ -115,7 +116,7 @@ public class EmailAuthFacade {
             return ResponseEntity.ok(result);
 
         } catch (DataAccessException e) {
-            log.error("코드 검증/ID 조회 중 데이터 접근 예외 - email={}", email, e);
+            LogUtil.error(log, EmailAuthFacade.class, e);
             Map<String, Object> body = new HashMap<>();
             body.put("success", false);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
@@ -151,7 +152,7 @@ public class EmailAuthFacade {
                     });
 
         } catch (DataAccessException e) {
-            log.error("마스킹 정보 조회 중 데이터 접근 예외 - userId={}", userId, e);
+            LogUtil.error(log, EmailAuthFacade.class, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new HashMap<>());
         } catch (Exception e) {
             log.error("마스킹 정보 조회 중 예기치 못한 예외 - userId={}", userId, e);
@@ -196,7 +197,7 @@ public class EmailAuthFacade {
                     // TODO: SMS 연동
                 }
             } catch (Exception e) {
-                log.error("임시 비밀번호 발송 실패 - userId={}", userId, e);
+                LogUtil.error(log, EmailAuthFacade.class, e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(new EmailAuthResponseDto(false, "임시비밀번호 발송 실패"));
             }
@@ -204,7 +205,7 @@ public class EmailAuthFacade {
             return ResponseEntity.ok(new EmailAuthResponseDto(true, "임시비밀번호가 발송되었습니다."));
 
         } catch (DataAccessException e) {
-            log.error("임시 비밀번호 처리 중 데이터 접근 예외 - userId={}", userId, e);
+            LogUtil.error(log, EmailAuthFacade.class, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new EmailAuthResponseDto(false, "처리 중 오류가 발생했습니다."));
         } catch (Exception e) {

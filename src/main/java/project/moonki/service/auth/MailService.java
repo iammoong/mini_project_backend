@@ -10,6 +10,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import project.moonki.utils.LogUtil;
 
 @Slf4j
 @Service
@@ -46,7 +47,7 @@ public class MailService {
 
             mailSender.send(message);
         } catch (MessagingException e) {
-            log.error("인증번호 메일 발송 실패 - email={}, username={}", email, username, e);
+            LogUtil.error(log, EmailAuthFacade.class, e);
             throw new RuntimeException("인증번호 메일 발송 중 오류가 발생했습니다.");
         } catch (Exception e) {
             log.error("인증번호 메일 발송 중 예기치 못한 예외 - email={}, username={}", email, username, e);
@@ -79,7 +80,7 @@ public class MailService {
 
             mailSender.send(message);
         } catch (MessagingException e) {
-            log.error("임시 비밀번호 메일 발송 실패 - email={}, username={}", email, username, e);
+            LogUtil.error(log, EmailAuthFacade.class, e);
             throw new RuntimeException("임시 비밀번호 메일 발송 중 오류가 발생했습니다.");
         } catch (Exception e) {
             log.error("임시 비밀번호 메일 발송 중 예기치 못한 예외 - email={}, username={}", email, username, e);
