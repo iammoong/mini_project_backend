@@ -34,10 +34,17 @@ public class AccountService {
             return MUserMapper.toResponse(user);
         } catch (Exception e) {
             LogUtil.error(log, AccountService.class, e);
-            throw e; // 정책상 그대로 재던지기 (전역 예외 처리기에서 변환/응답)
+            throw e;
         }
     }
 
+    /***
+     * 사용자 정보 변경
+     *
+     * @param authentication
+     * @param req
+     * @return
+     */
     @Transactional
     public LoginResponseDto updateMe(Authentication authentication, UserUpdateRequestDto req) {
         try {
@@ -86,10 +93,16 @@ public class AccountService {
 
         } catch (Exception e) {
             LogUtil.error(log, AccountService.class, e);
-            throw e; // RuntimeException이면 @Transactional에 의해 롤백
+            throw e;
         }
     }
 
+    /***
+     * 비밀번호 변경
+     *
+     * @param authentication
+     * @param req
+     */
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(Authentication authentication, ChangePasswordRequestDto req) {
         try {
@@ -122,22 +135,45 @@ public class AccountService {
                 throw new IllegalArgumentException("새 비밀번호가 기존과 동일합니다.");
             }
 
-            // 비밀번호 변경 (더티체킹)
+            // 비밀번호 변경
             String encoded = passwordEncoder.encode(req.newPassword());
-            user.changePassword(encoded); // 엔티티 세터/메서드
+            user.changePassword(encoded);
 
             // 영속 상태이므로 별도 save() 없이 커밋 시 UPDATE 수행
             log.info("[changePassword] Password changed: userId={}", user.getUserId());
 
         } catch (LoginService.UnauthorizedException | IllegalArgumentException e) {
             log.warn("[changePassword] Client error: {}", e.getMessage());
-            throw e; // 전역 예외 핸들러에서 401/400으로 매핑
+            throw e;
         } catch (Exception e) {
             LogUtil.error(log, AccountService.class, e);
             throw new RuntimeException("비밀번호 변경 처리 중 오류가 발생했습니다.");
         }
     }
 
+    /***
+     * 회원탈퇴
+     *
+     * @param authentication
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteMe(Authentication authentication) {
+        MUser me = resolveUser(authentication);
+        // 하드 삭제. 연관 데이터가 생기면 soft-delete로 전환 검토
+        muserRepository.delete(me);
+    }
+
+    /**
+     * Resolves the authenticated user from the provided {@link Authentication} object.
+     * This method checks if the authentication is valid and extracts the {@link MUser} entity
+     * associated with the authenticated principal.
+     *
+     * @param authentication the authentication object that contains the user's authentication details,
+     *                        which must be authenticated and contain a valid principal of type {@link MUserDetailsDto}.
+     * @return the resolved {@link MUser} entity representing the authenticated user.
+     * @throws org.springframework.security.access.AccessDeniedException if the authentication object is null or unauthenticated.
+     * @throws IllegalStateException if the principal in the authentication object is not of type {@link MUserDetailsDto}.
+     */
     private MUser resolveUser(Authentication authentication) {
         // resolveUser 내부는 그대로 두고, 상위 메서드에서 예외 로깅/처리 일원화
         if (authentication == null || !authentication.isAuthenticated()) {
