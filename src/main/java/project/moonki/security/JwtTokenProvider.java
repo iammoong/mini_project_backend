@@ -4,8 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 /**
@@ -18,34 +22,50 @@ import java.util.Date;
  * - Extract user-specific details (userId) from a JWT token.
  */
 @Component
-public class JwtTokenProvider {
-    private final String SECRET_KEY = "zQclYAzXpC5mAuOOx/SeTQnFdzt9N1RDe7T4uzjQfhg="; // 반드시 환경변수 처리
-    private final long EXPIRATION = 1000L * 60 * 60; // 1시간
+public class JwtTokenProvider {private final SecretKey key;        // HS256용 키
+    private final long expirationMillis;
+
+    // 설정/환경변수에서 주입되며, 값 미지정 시 기존 하드코딩 값으로 fallback
+    public JwtTokenProvider(
+            @Value("${jwt.secret:zQclYAzXpC5mAuOOx/SeTQnFdzt9N1RDe7T4uzjQfhg=}") String base64Secret,
+            @Value("${jwt.expiration-ms:1800000}") long expirationMillis // 기본 30분
+    ) {
+        // Base64 디코딩된 바이트로 HMAC 키 생성 (256비트 이상 권장)
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(base64Secret));
+        this.expirationMillis = expirationMillis;
+    }
 
     // 토큰 생성
     public String generateToken(String userId) {
+        Date now = new Date();
         return Jwts.builder()
-                .setSubject(userId)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .subject(userId)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationMillis))
+                .signWith(key)
                 .compact();
     }
 
-    // 토큰 검증
+    // 토큰 검증 (서명/만료 모두 검증)
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
+            Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    // 토큰에서 userId 추출
+    // 토큰에서 userId(subject) 추출
     public String getUserId(String token) {
-        Claims claims = Jwts.parser().setSigningKey(SECRET_KEY)
-                .parseClaimsJws(token).getBody();
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
         return claims.getSubject();
     }
 }

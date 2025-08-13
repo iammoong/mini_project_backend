@@ -142,6 +142,7 @@ public class AccountService {
             // 영속 상태이므로 별도 save() 없이 커밋 시 UPDATE 수행
             log.info("[changePassword] Password changed: userId={}", user.getUserId());
 
+
         } catch (LoginService.UnauthorizedException | IllegalArgumentException e) {
             log.warn("[changePassword] Client error: {}", e.getMessage());
             throw e;
