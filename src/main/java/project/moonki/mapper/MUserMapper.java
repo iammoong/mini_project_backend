@@ -22,6 +22,11 @@ public class MUserMapper {
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
         dto.setCreatedAt(user.getCreatedAt());
+        if (user.getProfileImage() != null) {
+            Long imgId = user.getProfileImage().getId();
+            dto.setProfileImageId(imgId);
+            dto.setProfileImageUrl("/auth/image/" + imgId);
+        }
         return dto;
     }
 }

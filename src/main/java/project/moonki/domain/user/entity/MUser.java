@@ -14,6 +14,10 @@ public class MUser {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "profile_image_id", foreignKey = @ForeignKey(name = "fk_m_user_profile_image"))
+    private MUserImage profileImage;
+
     @Column(name = "kakao_id", length = 50)
     private String kakaoId;
 

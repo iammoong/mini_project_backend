@@ -19,5 +19,7 @@ public class UserResponseDto {
     private String email;
     private String nickname;
     private String phone;
+    private Long profileImageId;
+    private String profileImageUrl;
     private LocalDateTime createdAt;
 }

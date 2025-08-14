@@ -28,13 +28,22 @@ public class LoginService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    /** 회원가입 */
+    /***
+     * 회원가입
+     * @param req
+     * @return
+     */
     @Transactional
     public UserResponseDto signup(SignupRequestDto req) {
         return mUserService.signup(req);
     }
 
-    /** 로그인 + 토큰 발급 (컨트롤러가 토큰 생성 로직을 몰라도 됨) */
+    /***
+     * 로그인 + 토큰 발급
+     *
+     * @param req
+     * @return
+     */
     public LoginResponseDto login(LoginRequestDto req) {
         try {
             MUser user = muserRepository.findByUserId(req.getUserId())
@@ -55,16 +64,31 @@ public class LoginService {
         }
     }
 
-    /** 중복 체크 */
+    /***
+     * 아이디 중복 체크
+     *
+     * @param userId
+     * @return
+     */
     public boolean existsUserId(String userId) {
         return muserRepository.existsByUserId(userId);
     }
 
+    /***
+     * 닉네임 중복 체크
+     *
+     * @param nickname
+     * @return
+     */
     public boolean existsNickname(String nickname) {
         return muserRepository.existsByNickname(nickname);
     }
 
-    /** 현재 사용자 정보 */
+    /***
+     * 현재 사용자 정보
+     *
+     * @return
+     */
     public UserResponseDto me() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
@@ -75,7 +99,10 @@ public class LoginService {
         return MUserMapper.toResponse(principal.getUser());
     }
 
-    /** 401 처리를 위한 도메인 예외 */
+    /**
+     * 401 처리를 위한 도메인 예외
+     *
+     */
     public static class UnauthorizedException extends RuntimeException {
         public UnauthorizedException(String message) { super(message); }
     }

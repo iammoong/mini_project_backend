@@ -6,8 +6,8 @@ import lombok.Data;
 @Data
 public class UserUpdateRequestDto {
 
-    // ★ 신규: 아이디 변경 시 사용 (미변경이면 null)
     private String newUserId;
+    private String userId;
     private String username;
     private String nickname;
 

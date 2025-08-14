@@ -43,26 +43,26 @@ public class KakaoService {
     public LoginResponseDto loginWithKakao(String code) {
         log.info("[KakaoService] 로그인 시작 - code={}", code);
         try {
-            // 1) 토큰 교환 & 사용자 조회
+            // 토큰 교환 & 사용자 조회
             var token = kakaoClient.exchangeToken(code);
             log.info("[KakaoService] 토큰 발급 성공");
             var me = kakaoClient.fetchUser(token.getAccessToken());
             log.info("[KakaoService] 사용자 정보 조회 성공 - id={}", me.getId());
 
-            // 2) 카카오 데이터 파싱
+            // 카카오 데이터 파싱
             Long kakaoId = me.getId();
             String kakaoIdStr = String.valueOf(kakaoId);
             String email = resolveEmail(me);
             String nickname = resolveNickname(me);
             String userId = KAKAO_USERID_PREFIX + kakaoId;
 
-            // 3) 가입 또는 조회 + 필드 동기화
+            // 가입 또는 조회 + 필드 동기화
             MUser user = upsertUser(kakaoIdStr, userId, email, nickname);
 
-            // 4) JWT 발급
+            // JWT 발급
             String jwtToken = jwt.generateToken(user.getUserId());
 
-            // 5) 응답 DTO
+            // 응답 DTO
             UserResponseDto userDto = toUserResponse(user);
             log.info("[KakaoService] 로그인 성공 - userId={}, token 발급", user.getUserId());
             return LoginResponseDto.builder()
