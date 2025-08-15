@@ -35,9 +35,8 @@ public class MUserDetailsDto implements UserDetails {
 
     @Override
     public String getUsername() {
-        return "";
+        return user.getUserId(); //
     }
-
     @Override
     public boolean isAccountNonExpired() {
         return UserDetails.super.isAccountNonExpired();

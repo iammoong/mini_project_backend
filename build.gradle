@@ -53,6 +53,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+    // 웹소켓
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 
 }
 

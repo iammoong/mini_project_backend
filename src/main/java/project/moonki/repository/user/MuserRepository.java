@@ -2,10 +2,11 @@ package project.moonki.repository.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import project.moonki.domain.user.entity.MUser;
+import project.moonki.repository.user.custom.MuserRepositoryCustom;
 
 import java.util.Optional;
 
-public interface MuserRepository extends JpaRepository<MUser, Long> {
+public interface MuserRepository extends JpaRepository<MUser, Long>, MuserRepositoryCustom {
     Optional <MUser> findByUserId(String userId);
     Optional <MUser> findByKakaoId(String kakaoId);
     boolean existsByUserId(String userId);
@@ -14,4 +15,5 @@ public interface MuserRepository extends JpaRepository<MUser, Long> {
     // 이메일(아이디)로 MUser 찾기
     Optional<MUser> findByEmail(String email);
     boolean existsByEmail(String email);
+
 }
