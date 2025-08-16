@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import project.moonki.domain.chat.ChatMessage;
 import project.moonki.domain.chat.ChatRead;
 import project.moonki.domain.chat.ChatRoom;
@@ -15,7 +17,9 @@ import project.moonki.repository.chat.ChatRoomRepository;
 import project.moonki.utils.LogUtil;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -83,6 +87,10 @@ public class ChatService {
      */
     @Transactional
     public ChatMessage saveMessage(Long roomId, Long senderId, String content) {
+        ChatRoom room = rooms.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!room.hasParticipant(senderId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         try {
             ChatMessage msg = ChatMessage.builder()
                     .roomId(roomId)
@@ -117,13 +125,27 @@ public class ChatService {
     @Transactional
     public void markRead(Long roomId, Long userId) {
         try {
+            ChatRoom room = rooms.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if (!room.hasParticipant(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
             ChatRead r = reads.findByRoomIdAndUserId(roomId, userId)
                     .orElse(ChatRead.builder().roomId(roomId).userId(userId).lastReadAt(LocalDateTime.MIN).build());
             r.setLastReadAt(LocalDateTime.now());
             reads.save(r);
         } catch (Exception e) {
             LogUtil.error(log, ChatService.class, e);
+            throw e;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ChatMessage> getMessagesForUser(Long roomId, Long userId, int page, int size) {
+        ChatRoom room = rooms.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!room.hasParticipant(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        return messages.findByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(page, size));
     }
 
     /**
@@ -152,5 +174,33 @@ public class ChatService {
             LogUtil.error(log, ChatService.class, e);
             throw e;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public long countUnreadFrom(Long roomId, Long receiverId, Long senderId) {
+        try {
+            LocalDateTime lastRead = reads.findByRoomIdAndUserId(roomId, receiverId)
+                    .map(ChatRead::getLastReadAt).orElse(LocalDateTime.MIN);
+            return messages.countByRoomIdAndSenderIdAndCreatedAtAfter(roomId, senderId, lastRead);
+        } catch (Exception e) {
+            LogUtil.error(log, ChatService.class, e);
+            throw e;
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> countUnreadByOther(Long userId) {
+        return rooms.findAll().stream()
+                .filter(r -> r.hasParticipant(userId))
+                .collect(Collectors.toMap(
+                        r -> r.otherOf(userId),
+                        r -> {
+                            LocalDateTime last = reads.findByRoomIdAndUserId(r.getId(), userId)
+                                    .map(ChatRead::getLastReadAt).orElse(LocalDateTime.MIN);
+                            Long other = r.otherOf(userId);
+                            return messages.countByRoomIdAndSenderIdAndCreatedAtAfter(r.getId(), other, last);
+                        },
+                        Long::sum // 동일 상대가 여러 방인 경우(현재는 DM만이라 사실상 1개)
+                ));
     }
 }

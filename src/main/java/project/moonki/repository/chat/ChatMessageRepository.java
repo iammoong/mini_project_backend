@@ -8,4 +8,6 @@ import project.moonki.domain.chat.ChatMessage;
 public interface ChatMessageRepository  extends JpaRepository<ChatMessage,Long>{
     Page<ChatMessage> findByRoomIdOrderByCreatedAtDesc(Long roomId, Pageable pageable);
     long countByRoomIdAndCreatedAtAfter(Long roomId, java.time.LocalDateTime after);
+
+    long countByRoomIdAndSenderIdAndCreatedAtAfter(Long roomId, Long senderId, java.time.LocalDateTime after);
 }
