@@ -10,16 +10,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import project.moonki.domain.chat.ChatMessage;
+import project.moonki.domain.chat.ChatRead;
 import project.moonki.domain.chat.ChatRoom;
 import project.moonki.domain.user.entity.MUser;
-import project.moonki.dto.chat.ChatMessageDto;
-import project.moonki.dto.chat.ChatRoomDto;
-import project.moonki.dto.chat.ChatUserItemDto;
-import project.moonki.dto.chat.UnreadBySenderDto;
+import project.moonki.dto.chat.*;
+import project.moonki.repository.chat.ChatMessageRepository;
+import project.moonki.repository.chat.ChatReadRepository;
 import project.moonki.repository.chat.ChatRoomRepository;
 import project.moonki.repository.user.MuserRepository;
 import project.moonki.utils.LogUtil;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +35,8 @@ public class ChatQueryService {
     private final ChatService chatService;
     private final ChatRoomRepository chatRoomRepository;
     private final MuserRepository muserRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatReadRepository chatReadRepository;
 
     /** 사용자 검색(내 계정 제외) + 미읽음 보낸 사람 우선 정렬 */
     public List<ChatUserItemDto> listUsersWithUnreadFirst(Long myId, String q, int limit) {
@@ -121,6 +126,77 @@ public class ChatQueryService {
         } catch (Exception e) {
             LogUtil.error(log, ChatQueryService.class, e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "읽음 처리 중 오류가 발생했습니다.", e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChatRoomListItemDto> myRooms(Long myId, int limit) {
+        try {
+            // 내가 참가자인 방만 필터
+            List<ChatRoom> all = chatRoomRepository.findAll().stream()
+                    .filter(r -> r.hasParticipant(myId))
+                    .toList();
+
+            return all.stream()
+                    .map(r -> {
+                        Long otherId = r.otherOf(myId);
+
+                        // 상대 요약
+                        MUser other = muserRepository.findById(otherId).orElse(null);
+                        ChatUserItemDto otherDto = (other == null) ? null : new ChatUserItemDto(
+                                other.getId(),
+                                other.getNickname(),
+                                other.getUsername(),
+                                other.getEmail(),
+                                (other.getProfileImage() != null) ? other.getProfileImage().getId() : null
+                        );
+
+                        // 마지막 메시지(최신 1건) - chatService.getMessages()가 최신정렬(내림차순) 1건을 반환한다고 가정
+                        Page<ChatMessage> lastPage = chatService.getMessages(r.getId(), 0, 1);
+                        ChatMessage last = lastPage.getContent().isEmpty() ? null : lastPage.getContent().get(0);
+
+                        ChatMessageDto lastDto = null;
+                        if (last != null) {
+                            // 엔티티에 senderNickname 필드가 없을 수 있으므로 별도 조회
+                            String senderNickname = muserRepository.findById(last.getSenderId())
+                                    .map(MUser::getNickname)
+                                    .orElse(null);
+
+                            lastDto = new ChatMessageDto(
+                                    last.getId(),
+                                    r.getId(),
+                                    last.getSenderId(),
+                                    senderNickname,
+                                    last.getContent(),
+                                    last.getCreatedAt()
+                            );
+                        }
+
+                        // 미읽음 계산(상대가 보낸 메시지만 카운트)
+                        LocalDateTime lastRead = chatReadRepository
+                                .findByRoomIdAndUserId(r.getId(), myId)
+                                .map(ChatRead::getLastReadAt)
+                                .orElse(LocalDateTime.MIN);
+
+                        long unread = chatMessageRepository
+                                .countByRoomIdAndSenderIdAndCreatedAtAfter(r.getId(), otherId, lastRead);
+
+                        return new ChatRoomListItemDto(r.getId(), otherDto, lastDto, unread);
+                    })
+                    .sorted(Comparator.comparing((ChatRoomListItemDto it) -> {
+                        if (it.lastMessage() == null || it.lastMessage().createdAt() == null) {
+                            return Instant.EPOCH;
+                        }
+                        // createdAt이 LocalDateTime이라 가정
+                        return it.lastMessage().createdAt()
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant();
+                    }).reversed())
+                    .limit(Math.max(1, limit))
+                    .toList();
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "나의 채팅방 조회 실패", e);
         }
     }
 

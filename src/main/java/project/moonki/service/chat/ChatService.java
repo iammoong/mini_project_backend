@@ -11,12 +11,21 @@ import org.springframework.web.server.ResponseStatusException;
 import project.moonki.domain.chat.ChatMessage;
 import project.moonki.domain.chat.ChatRead;
 import project.moonki.domain.chat.ChatRoom;
+import project.moonki.domain.user.entity.MUser;
+import project.moonki.dto.chat.ChatMessageDto;
+import project.moonki.dto.chat.ChatRoomListItemDto;
+import project.moonki.dto.chat.ChatUserItemDto;
 import project.moonki.repository.chat.ChatMessageRepository;
 import project.moonki.repository.chat.ChatReadRepository;
 import project.moonki.repository.chat.ChatRoomRepository;
+import project.moonki.repository.user.MuserRepository;
 import project.moonki.utils.LogUtil;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,26 +34,29 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ChatService {
-    private final ChatRoomRepository rooms;
-    private final ChatMessageRepository messages;
-    private final ChatReadRepository reads;
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatReadRepository chatReadRepository;
 
     /**
-     * 채팅방 생성
+     * Retrieves an existing direct message (DM) chat room between two users or creates a new one
+     * if it does not already exist. Ensures that the associated read rows are pre-created for
+     * both users.
      *
-     * @param me
-     * @param other
-     * @return
+     * @param me   the user ID of the first user (typically the current user)
+     * @param other the user ID of the second user
+     * @return the existing or newly created ChatRoom instance representing the DM chat room
+     *         between the two users
      */
     @Transactional
     public ChatRoom getOrCreateDmRoom(Long me, Long other) {
         try {
             long u1 = Math.min(me, other), u2 = Math.max(me, other);
-            Optional<ChatRoom> found = rooms.findByUser1IdAndUser2Id(u1, u2);
+            Optional<ChatRoom> found = chatRoomRepository.findByUser1IdAndUser2Id(u1, u2);
             if (found.isPresent()) return found.get();
 
             ChatRoom created = ChatRoom.dm(me, other);
-            rooms.save(created);
+            chatRoomRepository.save(created);
 
             // read row 미리 생성
             ensureReadRow(created.getId(), me);
@@ -66,8 +78,8 @@ public class ChatService {
      */
     @Transactional
     public ChatRead ensureReadRow(Long roomId, Long userId) {
-        return reads.findByRoomIdAndUserId(roomId, userId)
-                .orElseGet(() -> reads.save(
+        return chatReadRepository.findByRoomIdAndUserId(roomId, userId)
+                .orElseGet(() -> chatReadRepository.save(
                         ChatRead.builder()
                                 .roomId(roomId)
                                 .userId(userId)
@@ -87,7 +99,7 @@ public class ChatService {
      */
     @Transactional
     public ChatMessage saveMessage(Long roomId, Long senderId, String content) {
-        ChatRoom room = rooms.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ChatRoom room = chatRoomRepository.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!room.hasParticipant(senderId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
@@ -98,17 +110,28 @@ public class ChatService {
                     .content(content)
                     .createdAt(LocalDateTime.now())
                     .build();
-            return messages.save(msg);
+            return chatMessageRepository.save(msg);
         } catch (Exception e) {
             LogUtil.error(log, ChatService.class, e);
             throw e;
         }
     }
 
+    /**
+     * Retrieves a paginated list of chat messages for a specific chat room,
+     * ordered by their creation timestamp in descending order.
+     *
+     * @param roomId the ID of the chat room whose messages are to be retrieved
+     * @param page the page number of the messages to retrieve (zero-based index)
+     * @param size the number of messages to retrieve per page
+     * @return a paginated list of chat messages for the specified chat room
+     *         ordered by their creation time in descending order
+     * @throws RuntimeException if an error occurs during message retrieval
+     */
     @Transactional(readOnly = true)
     public Page<ChatMessage> getMessages(Long roomId, int page, int size) {
         try {
-            return messages.findByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(page, size));
+            return chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(page, size));
         } catch (Exception e) {
             LogUtil.error(log, ChatService.class, e);
             throw e;
@@ -125,14 +148,14 @@ public class ChatService {
     @Transactional
     public void markRead(Long roomId, Long userId) {
         try {
-            ChatRoom room = rooms.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            ChatRoom room = chatRoomRepository.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             if (!room.hasParticipant(userId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
-            ChatRead r = reads.findByRoomIdAndUserId(roomId, userId)
+            ChatRead r = chatReadRepository.findByRoomIdAndUserId(roomId, userId)
                     .orElse(ChatRead.builder().roomId(roomId).userId(userId).lastReadAt(LocalDateTime.MIN).build());
             r.setLastReadAt(LocalDateTime.now());
-            reads.save(r);
+            chatReadRepository.save(r);
         } catch (Exception e) {
             LogUtil.error(log, ChatService.class, e);
             throw e;
@@ -141,11 +164,11 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public Page<ChatMessage> getMessagesForUser(Long roomId, Long userId, int page, int size) {
-        ChatRoom room = rooms.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ChatRoom room = chatRoomRepository.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!room.hasParticipant(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        return messages.findByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(page, size));
+        return chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(page, size));
     }
 
     /**
@@ -163,12 +186,12 @@ public class ChatService {
             // 실제 서비스에서는 쿼리 최적화/집계 테이블 사용 고려
             // (여기서는 실용적 단순화)
             // rooms 전체 순회 -> 각 room에 대해 reads와 메시지수 계산
-            return rooms.findAll().stream()
+            return chatRoomRepository.findAll().stream()
                     .filter(r -> r.hasParticipant(userId))
                     .mapToLong(r -> {
-                        LocalDateTime lastRead = reads.findByRoomIdAndUserId(r.getId(), userId)
+                        LocalDateTime lastRead = chatReadRepository.findByRoomIdAndUserId(r.getId(), userId)
                                 .map(ChatRead::getLastReadAt).orElse(LocalDateTime.MIN);
-                        return messages.countByRoomIdAndCreatedAtAfter(r.getId(), lastRead);
+                        return chatMessageRepository.countByRoomIdAndCreatedAtAfter(r.getId(), lastRead);
                     }).sum();
         } catch (Exception e) {
             LogUtil.error(log, ChatService.class, e);
@@ -179,9 +202,9 @@ public class ChatService {
     @Transactional(readOnly = true)
     public long countUnreadFrom(Long roomId, Long receiverId, Long senderId) {
         try {
-            LocalDateTime lastRead = reads.findByRoomIdAndUserId(roomId, receiverId)
+            LocalDateTime lastRead = chatReadRepository.findByRoomIdAndUserId(roomId, receiverId)
                     .map(ChatRead::getLastReadAt).orElse(LocalDateTime.MIN);
-            return messages.countByRoomIdAndSenderIdAndCreatedAtAfter(roomId, senderId, lastRead);
+            return chatMessageRepository.countByRoomIdAndSenderIdAndCreatedAtAfter(roomId, senderId, lastRead);
         } catch (Exception e) {
             LogUtil.error(log, ChatService.class, e);
             throw e;
@@ -190,17 +213,18 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public Map<Long, Long> countUnreadByOther(Long userId) {
-        return rooms.findAll().stream()
+        return chatRoomRepository.findAll().stream()
                 .filter(r -> r.hasParticipant(userId))
                 .collect(Collectors.toMap(
                         r -> r.otherOf(userId),
                         r -> {
-                            LocalDateTime last = reads.findByRoomIdAndUserId(r.getId(), userId)
+                            LocalDateTime last = chatReadRepository.findByRoomIdAndUserId(r.getId(), userId)
                                     .map(ChatRead::getLastReadAt).orElse(LocalDateTime.MIN);
                             Long other = r.otherOf(userId);
-                            return messages.countByRoomIdAndSenderIdAndCreatedAtAfter(r.getId(), other, last);
+                            return chatMessageRepository.countByRoomIdAndSenderIdAndCreatedAtAfter(r.getId(), other, last);
                         },
                         Long::sum // 동일 상대가 여러 방인 경우(현재는 DM만이라 사실상 1개)
                 ));
     }
+
 }

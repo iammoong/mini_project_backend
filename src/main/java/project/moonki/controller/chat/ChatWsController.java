@@ -52,7 +52,8 @@ public class ChatWsController {
                 nickname, saved.getContent(), saved.getCreatedAt()
         );
 
-        broker.convertAndSend("/topic/chat." + roomId, payload);
+        //broker.convertAndSend("/topic/chat." + roomId, payload);
+        broker.convertAndSend("/topic/chat.room." + roomId, payload);
 
         var room = rooms.findById(roomId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

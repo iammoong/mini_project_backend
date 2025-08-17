@@ -5,10 +5,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import project.moonki.dto.chat.ChatMessageDto;
-import project.moonki.dto.chat.ChatRoomDto;
-import project.moonki.dto.chat.ChatUserItemDto;
-import project.moonki.dto.chat.UnreadBySenderDto;
+import project.moonki.dto.chat.*;
 import project.moonki.dto.login.MUserDetailsDto;
 import project.moonki.service.chat.ChatQueryService;
 
@@ -74,5 +71,13 @@ public class ChatRestController {
     @GetMapping("/unread/by-sender")
     public List<UnreadBySenderDto> unreadBySender(@AuthenticationPrincipal MUserDetailsDto principal) {
         return chatQuery.unreadBySender(principal.getUser().getId());
+    }
+
+    @GetMapping("/rooms/my")
+    public List<ChatRoomListItemDto> myRooms(
+            @AuthenticationPrincipal MUserDetailsDto principal,
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return chatQuery.myRooms(principal.getUser().getId(), limit);
     }
 }
