@@ -45,6 +45,8 @@ public class ChatWsController {
         WsUserPrincipal p = (WsUserPrincipal) principal;
 
         var saved = chatService.saveMessage(roomId, p.getUserPk(), req.content());
+        chatService.markRead(roomId, p.getUserPk());
+
         String nickname = users.findById(p.getUserPk()).map(MUser::getNickname).orElse("unknown");
 
         ChatMessageDto payload = new ChatMessageDto(

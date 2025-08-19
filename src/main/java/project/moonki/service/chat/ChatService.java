@@ -191,7 +191,9 @@ public class ChatService {
                     .mapToLong(r -> {
                         LocalDateTime lastRead = chatReadRepository.findByRoomIdAndUserId(r.getId(), userId)
                                 .map(ChatRead::getLastReadAt).orElse(LocalDateTime.MIN);
-                        return chatMessageRepository.countByRoomIdAndCreatedAtAfter(r.getId(), lastRead);
+                        long total = chatMessageRepository.countByRoomIdAndCreatedAtAfter(r.getId(), lastRead);
+                        long mine  = chatMessageRepository.countByRoomIdAndSenderIdAndCreatedAtAfter(r.getId(), userId, lastRead);
+                        return total - mine; // ★ 내 메시지는 제외
                     }).sum();
         } catch (Exception e) {
             LogUtil.error(log, ChatService.class, e);
