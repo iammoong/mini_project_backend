@@ -129,6 +129,12 @@ public class ChatQueryService {
         }
     }
 
+    /**
+     *
+     * @param myId
+     * @param limit
+     * @return
+     */
     @Transactional(readOnly = true)
     public List<ChatRoomListItemDto> myRooms(Long myId, int limit) {
         try {

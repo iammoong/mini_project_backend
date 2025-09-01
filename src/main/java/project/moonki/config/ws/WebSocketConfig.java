@@ -10,22 +10,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-/**
- * Configuration class for WebSocket setup and message broker configuration.
- * Implements the {@link WebSocketMessageBrokerConfigurer} interface to customize
- * WebSocket message handling and broker settings.
- *
- * The class defines custom components and overrides necessary methods for:
- * - Stomp endpoint registration
- * - Message broker configuration
- * - WebSocket heartbeat task scheduling
- *
- * Features:
- * - Configures a STOMP endpoint with custom URL, allowed origins, and SockJS fallback.
- * - Integrates a JWT-based handshake interceptor for authentication during WebSocket connections.
- * - Defines a custom handshake handler to provide user-specific session attributes and Principal.
- * - Sets up a simple message broker with configurable destinations and heartbeat intervals.
- */
 @Configuration(proxyBeanMethods = true)
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor

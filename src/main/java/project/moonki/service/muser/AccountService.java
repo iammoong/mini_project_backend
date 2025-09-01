@@ -75,7 +75,7 @@ public class AccountService {
             // 아이디 변경
 
 
-            boolean needReauth = false;
+            boolean isNeedReauth = false;
 
             if (req.getUserId() != null && !req.getUserId().isBlank()
                     && !req.getUserId().equals(user.getUserId())) {
@@ -83,7 +83,7 @@ public class AccountService {
                     throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
                 }
                 user.setUserId(req.getUserId());
-                needReauth = true;
+                isNeedReauth = true;
             }
 
             // 닉네임 변경
@@ -102,7 +102,7 @@ public class AccountService {
 
             // 아이디 변경 시 새 토큰 발급
             String token = null;
-            if (needReauth) {
+            if (isNeedReauth) {
                 token = jwtTokenProvider.generateToken(saved.getUserId());
             }
 

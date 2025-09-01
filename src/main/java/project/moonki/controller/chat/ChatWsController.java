@@ -8,6 +8,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.server.ResponseStatusException;
 import project.moonki.config.ws.WsUserPrincipal;
+import project.moonki.domain.chat.ChatMessage;
+import project.moonki.domain.chat.ChatRoom;
 import project.moonki.domain.user.entity.MUser;
 import project.moonki.dto.chat.ChatMessageDto;
 import project.moonki.dto.chat.ChatSendRequestDto;
@@ -44,7 +46,7 @@ public class ChatWsController {
     public void send(@DestinationVariable Long roomId, ChatSendRequestDto req, Principal principal) {
         WsUserPrincipal p = (WsUserPrincipal) principal;
 
-        var saved = chatService.saveMessage(roomId, p.getUserPk(), req.content());
+        ChatMessage saved = chatService.saveMessage(roomId, p.getUserPk(), req.content());
         chatService.markRead(roomId, p.getUserPk());
 
         String nickname = users.findById(p.getUserPk()).map(MUser::getNickname).orElse("unknown");
@@ -57,7 +59,7 @@ public class ChatWsController {
         //broker.convertAndSend("/topic/chat." + roomId, payload);
         broker.convertAndSend("/topic/chat.room." + roomId, payload);
 
-        var room = rooms.findById(roomId)
+        ChatRoom room = rooms.findById(roomId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Long receiver = room.otherOf(p.getUserPk());
 

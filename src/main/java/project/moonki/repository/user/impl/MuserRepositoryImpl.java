@@ -19,16 +19,11 @@ public class MuserRepositoryImpl implements MuserRepositoryCustom {
     private final JPAQueryFactory query;
 
     /**
-     * Searches for users based on specific conditions such as excluding a particular user,
-     * matching keywords in nickname or username, and limiting the number of results.
      *
-     * @param meId the ID of the user to exclude from the search results. If null, no filtering by ID is applied.
-     * @param q the keyword used to search for users. Matches both nickname and username, ignoring case.
-     *          If null or blank, no filtering by keyword is applied.
-     * @param limit the maximum number of results to return. If the specified limit is less than or equal to zero,
-     *              a default limit of 50 is applied.
-     * @return a list of {@code MUser} objects that match the specified search criteria, sorted by nickname
-     *         or username in ascending order. Returns an empty list if no users are found.
+     * @param meId
+     * @param q
+     * @param limit
+     * @return
      */
     @Override
     public List<MUser> searchUsers(Long meId, String q, int limit) {

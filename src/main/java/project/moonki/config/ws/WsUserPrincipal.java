@@ -1,5 +1,7 @@
 package project.moonki.config.ws;
 
+import lombok.Getter;
+
 import java.security.Principal;
 
 /**
@@ -25,6 +27,7 @@ import java.security.Principal;
  */
 public class WsUserPrincipal implements Principal {
     private final String name;  // userId (문자열)
+    @Getter
     private final Long userPk;  // 내부 PK
 
     public WsUserPrincipal(String userId, Long userPk) {
@@ -32,5 +35,4 @@ public class WsUserPrincipal implements Principal {
         this.userPk = userPk;
     }
     @Override public String getName() { return name; }
-    public Long getUserPk() { return userPk; }
 }

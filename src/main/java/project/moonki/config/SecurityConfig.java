@@ -39,9 +39,6 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/api/chat/**",
                                 "/ws/**"
-//                                "/api/auth/login",
-//                                "/api/auth/signup",
-//                                "/api/auth/exists/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

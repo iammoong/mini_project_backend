@@ -11,21 +11,12 @@ import org.springframework.web.server.ResponseStatusException;
 import project.moonki.domain.chat.ChatMessage;
 import project.moonki.domain.chat.ChatRead;
 import project.moonki.domain.chat.ChatRoom;
-import project.moonki.domain.user.entity.MUser;
-import project.moonki.dto.chat.ChatMessageDto;
-import project.moonki.dto.chat.ChatRoomListItemDto;
-import project.moonki.dto.chat.ChatUserItemDto;
 import project.moonki.repository.chat.ChatMessageRepository;
 import project.moonki.repository.chat.ChatReadRepository;
 import project.moonki.repository.chat.ChatRoomRepository;
-import project.moonki.repository.user.MuserRepository;
 import project.moonki.utils.LogUtil;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -74,11 +65,10 @@ public class ChatService {
      *
      * @param roomId the ID of the chat room
      * @param userId the ID of the user
-     * @return the existing or newly created ChatRead entry
      */
     @Transactional
-    public ChatRead ensureReadRow(Long roomId, Long userId) {
-        return chatReadRepository.findByRoomIdAndUserId(roomId, userId)
+    public void ensureReadRow(Long roomId, Long userId) {
+        chatReadRepository.findByRoomIdAndUserId(roomId, userId)
                 .orElseGet(() -> chatReadRepository.save(
                         ChatRead.builder()
                                 .roomId(roomId)
@@ -172,12 +162,9 @@ public class ChatService {
     }
 
     /**
-     * Counts the total number of unread messages for a user across all chat rooms they participate in.
-     * This method calculates the count by iterating through all chat rooms the user is a participant of and
-     * comparing the timestamp of the user's last read message in the room to the timestamp of new messages in the room.
      *
-     * @param userId the ID of the user for whom unread messages are being counted
-     * @return the total count of unread messages for the specified user
+     * @param userId
+     * @return
      */
     @Transactional(readOnly = true)
     public long countUnreadForUser(Long userId) {

@@ -105,12 +105,12 @@ public class EmailAuthFacade {
         String code = req.get("code");
 
         try {
-            boolean valid = codeService.checkCode(email, code);
+            boolean isValid = codeService.checkCode(email, code);
 
             Map<String, Object> result = new HashMap<>();
-            result.put("success", valid);
+            result.put("success", isValid);
 
-            if (valid) {
+            if (isValid) {
                 result.put("userId", muserRepository.findByEmail(email).map(MUser::getUserId).orElse(""));
             }
             return ResponseEntity.ok(result);
